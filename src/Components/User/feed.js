@@ -22,7 +22,7 @@ function Feed() {
 
                 <div className="inner">
 
-                    <Product></Product>
+                    
 
                 </div>
 
