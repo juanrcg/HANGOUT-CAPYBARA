@@ -1,23 +1,20 @@
-HANGOUT-CAPYBARA
-HANGOUT is a next-gen social network where users can buy and sell products, schedule services, and connect with others in real life. With AI-powered product recommendations and Google Maps integration, users can find and interact with places around them—such as bars,discos,Salons,events and barbershops—while discovering what people are doing there, what’s available to buy, and who’s open to hang out.
+🎉 HANGOUT-CAPYBARA 🎉
+HANGOUT is the next-gen social network where you can buy & sell products, schedule services, and connect with others in real life! With AI-powered recommendations and Google Maps integration, discover nearby bars, discos, salons, events, and barbershops. See what’s happening there, what you can buy, and who’s available to hang out with! 🕺💃
 
-Features:
-AI-Powered Recommendations: Get personalized product suggestions from Amazon.
-Real-World Party Mode: See available venues nearby, check crowd size, music, and if people are open to dance or chat.
-Profile & Inventory: Manage your own products and services.
-Integrated Calendar: Sync appointments with Google Calendar.
-Wallet & Payment: Add payment methods to receive money.
-Location-Based Search: Find nearby places and interact with businesses directly.
-Sale-Post: Instead of normal posting, give the opportunity to buy/schedule products and services from your posts.
-
-
-Technology:
+🚀 Features:
+🤖 AI-Powered Recommendations: Get personalized product suggestions from Amazon.
+🎶 Real-World Party Mode: See nearby venues, check crowd size, music, and who’s open to dance or chat.
+🛍️ Profile & Inventory: Manage your own products and services.
+📅 Integrated Calendar: Sync appointments with Google Calendar.
+💰 Wallet & Payment: Add payment methods to receive money easily.
+📍 Location-Based Search: Find nearby places and directly interact with businesses.
+🛒 Sale-Post: Post items for sale and allow others to buy or schedule services directly from the post!
+💻 Technology:
 Frontend: React.js, Google Maps API
 Backend: Node.js, AWS Lambda, AWS Rekognition
 Video Calling: PeerJS
 Authentication: AWS Cognito
-
-Future Features:
-Push Notifications
-Multi-User Video Calls
-Enhanced Search Filters
+🔮 Future Features:
+📲 Push Notifications
+🎥 Multi-User Video Calls
+🔍 Enhanced Search Filters
