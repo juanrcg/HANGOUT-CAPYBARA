@@ -1,0 +1,40 @@
+﻿body{
+
+    font-family:  Courier, monospace;
+    background-color: black !important; /* Override Bootstrap's default */
+    color: white !important; /* Override Bootstrap's default text color */
+}
+
+.sub-menu {
+    background-color: #222; /* Dark theme */
+    padding: 10px 0;
+  }
+  
+  .sub-menu-item {
+    color: #ccc;
+    font-size: 18px;
+    cursor: pointer;
+    position: relative;
+    transition: color 0.3s;
+  }
+  
+  .sub-menu-item:hover {
+    color: #fff;
+  }
+  
+  .sub-menu-item.active {
+    color: white;
+    font-weight: bold;
+  }
+  
+  .sub-menu-item.active::after {
+    content: "";
+    position: absolute;
+    bottom: -5px;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background-color: white;
+  }
+  
+
