@@ -12,3 +12,5 @@ Cómo se relacionan con los casos de uso:
 
 Los casos de uso cubren el inicio de sesion mediante google, si el programa es capaz de redigir al usuario una vez inicia sesion,
 y puede tomar esos valores para crear una sesion en cognito ,entonces el app funciona.
+
+NOTA: utilize JEST , durante la realizacion de las pruebas instale versiones de jest y babel por error , esto podria hacer el archivo un poco mas pesado de lo normal , tal vez necesites configurar el buffer git config --global http.postBuffer 524288000
