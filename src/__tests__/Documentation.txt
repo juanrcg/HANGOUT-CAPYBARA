@@ -1,0 +1,14 @@
+ Pruebas Unitarias
+
+1. Prueba de inicio de sesión con Google (handleGoogleSignIn)
+Propósito: Verifica que la función de inicio de sesión con Google redirige correctamente a la URL de Cognito, permitiendo que el usuario inicie sesión.
+Caso de uso: Esta prueba está relacionada con el proceso de autenticación, donde el usuario debe ser redirigido a una página de inicio de sesión para completar el proceso de autenticación.
+
+2.  Prueba de creación de sesión (registerFederatedUser)
+Propósito: Comprueba que un usuario federado ( Google) pueda crear correctamente una sesión en Cognito.
+Caso de uso: Esta prueba está vinculada al registro de nuevos usuarios a través de Google y la creación de su sesión en  Cognito.
+
+Cómo se relacionan con los casos de uso:
+
+Los casos de uso cubren el inicio de sesion mediante google, si el programa es capaz de redigir al usuario una vez inicia sesion,
+y puede tomar esos valores para crear una sesion en cognito ,entonces el app funciona.
