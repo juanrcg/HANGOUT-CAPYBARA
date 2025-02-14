@@ -545,7 +545,7 @@ if (window.location.hash) {
 
         return (
 
-            <AccountContext.Provider value={{ signup, signout, authenticate, verify, login, getSession, updateUser, fetchAttributeValue, userPool, cognitoIdentityServiceProvider, handleConfirmUser,handleGoogleSignIn }} >
+            <AccountContext.Provider value={{ signup, signout, authenticate, verify, login, getSession, updateUser, fetchAttributeValue, userPool, cognitoIdentityServiceProvider, handleConfirmUser,handleGoogleSignIn,registerFederatedUser, handleRedirect }} >
                 {props.children}
 
             </AccountContext.Provider>

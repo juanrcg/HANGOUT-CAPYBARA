@@ -7,6 +7,7 @@ import defaultUserPhoto from '../Chat/default_image.png'; // Replace with path t
 import { useWebSocket } from '../../Context/WebSocketContext';
 import AccountContext from '../../Context/AccountContext';
 
+
 function Feed() {
     const { socket, receivedPosts } = useWebSocket(); // Get receivedPosts from WebSocketContext
     const { getSession } = useContext(AccountContext);

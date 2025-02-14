@@ -1,7 +1,7 @@
 import React from 'react';
-import main_img from './main.webp';
 import Footer from './footer';
 import Header from './header';
+import Carousel from './Carousel/Carousel';
 
 function Home() {
   return (
@@ -11,9 +11,9 @@ function Home() {
       {/* Image container */}
       <div
         className="d-flex justify-content-center align-items-center"
-        style={{ height: 'calc(100vh - 60px)', marginTop: '20%' }} // Adjust based on your header height
+        style={{ height: 'calc(100vh - 90px)' }} // Adjust based on header height
       >
-        <img src={main_img} alt="Centered Image" className="img-fluid" />
+        <Carousel />
       </div>
 
       <Footer /> {/* Footer component */}
