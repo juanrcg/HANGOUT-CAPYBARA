@@ -11,6 +11,7 @@ function Feed_Header() {
   const navigate = useNavigate();
   const { getSession, signout } = useContext(AccountContext);
   const [searchTerm, setSearchTerm] = useState("");
+  const [sub, setSub] = useState('');
 
   const handleSearch = () => {
     if (searchTerm.trim() !== "") {
@@ -22,6 +23,7 @@ function Feed_Header() {
     getSession()
       .then((session) => {
         document.getElementById("username").innerHTML = session.name;
+        setSub(session.sub);  // Set sub in state
       })
       .catch((err) => {
         console.log(err);
@@ -87,7 +89,7 @@ function Feed_Header() {
             <a className="me-3 text-white" href="/chat">
               <FontAwesomeIcon icon={faMessage} />
             </a>
-            <a className="me-3 text-white text-decoration-none" href="/profile" id="username">
+            <a className="me-3 text-white text-decoration-none" href= {`/profile?username=${sub}`} id="username">
               username
             </a>
 
@@ -104,7 +106,7 @@ function Feed_Header() {
               </button>
               <ul className="dropdown-menu" aria-labelledby="dropdownMenuButton">
                 <li>
-                  <Link className="dropdown-item" to="/profile">
+                <Link className="dropdown-item" to={`/profile?username=${sub}`}>
                     Profile
                   </Link>
                 </li>

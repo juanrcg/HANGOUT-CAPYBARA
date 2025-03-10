@@ -19,7 +19,7 @@ import Feed_Header from './Components/User/feed_header';
 import Settings from './Components/User/settings';
 import Profile from './Components/User/profile';
 import Chat from './Components/Chat/chat';
-import Evento from './Components/Events/event';
+import Sproduct from './Components/Products/Sproduct';
 import Messager from './Components/Chat/message_box';
 import Video from './Components/Chat/VideoCall';
 import Inventory from './Components/User/Inventory';
@@ -30,8 +30,12 @@ import BusinessFinder from './Components/Finder/Finder';
 import Party from './Components/Party/Party';
 import GoogleCalendar from './Components/User/Calendar';
 import Wallet from './Components/User/Wallet';
+import Looker from './Components/Finder/looker';
+import Oinventory from './Components/Finder/Oinventory';
+import Oprofile from './Components/Finder/Oprofile';
+import Ocalendar from './Components/Finder/Ocalendar';
 
-const websocketurl = 'wss://zejczanjo5.execute-api.us-east-1.amazonaws.com/production/';
+const websocketurl = 'wss://qtwordoyl7.execute-api.us-east-1.amazonaws.com/production/';
 const baseUrl = document.getElementsByTagName('base')[0].getAttribute('href');
 const rootElement = document.getElementById('root');
 const root = createRoot(rootElement);
@@ -51,16 +55,20 @@ root.render(
             <Route path="profile" element={<Profile />} />
             <Route path="chat" element={<Chat />} />
             <Route path="message_box" element={<Messager />} />
-            <Route path="event" element={<Evento />} />
             <Route path="post" element={<Post />} />
             <Route path="bar" element={<Bar />} />
             <Route path="video" element={<Video />} />
             <Route path="inventory" element={<Inventory />} />
             <Route path="newproduct" element={<AddProduct />} />
             <Route path="finder" element={<BusinessFinder />} />
+            <Route path="looker" element={<Looker/>} />
             <Route path="party" element={<Party />} />
             <Route path="calendar" element={<GoogleCalendar />} />
             <Route path="wallet" element={<Wallet/>} />
+            <Route path="oinventory" element={<Oinventory/>} />
+            <Route path="oprofile" element={<Oprofile/>} />
+            <Route path="ocalendar" element={<Ocalendar/>} />
+            <Route path="sproduct" element={<Sproduct/>} />
           </Routes>
         </CallContextProvider>
       </WebSocketProvider>

@@ -1,11 +1,7 @@
 import React from "react";
-import { jwtDecode } from "jwt-decode"; 
-
 import AccountContext from "../Context/AccountContext"
-import userPool from "./UserPool";
 import { AuthenticationDetails, CognitoUser } from 'amazon-cognito-identity-js';
 import {  CognitoUserAttribute } from "amazon-cognito-identity-js"
-
 import { CognitoIdentityServiceProvider } from 'aws-sdk';
 const AmazonCognitoIdentity = require('amazon-cognito-identity-js');
 const { CognitoUserPool } = AmazonCognitoIdentity;
@@ -15,7 +11,6 @@ const cognito = new AWS.CognitoIdentityServiceProvider({ region: "us-east-1" });
 
 const UserPoolId = "us-east-1_E4tHXcNqJ";
 const ClientID = "2bbfea4ceslu5avrju1vc0d3e2";
-
 
 AWS.config.update({
         
@@ -87,7 +82,6 @@ const AccountState = (props) => {
 
     }
 
-
     const handleConfirmUser = async (username,confirmationCode) => {
         const params = {
             ClientId: ClientID,
@@ -104,101 +98,59 @@ const AccountState = (props) => {
         }
     };
 
-
-    const updateUser = async (email,attribute_insert,attribute_value) => {
-        return await new Promise((resolve, reject) => {
-
-            const user = userPool.getCurrentUser();
-
-            if (user) {
-
-                user.getSession(async (err, session) => {
-
-                    if (err) {
-
-                        reject(err);
-                    }
-                        else {
-
-                        if (attribute_insert == "password") {
-
-                          
-
-                          
-                            const user = new CognitoUser({
-                                Username: email,
-                                Pool: userPool,
-
-
-
-                            })
-
-                            user.forgotPassword({
-
-                                onSuccess: () => {
-                                    console.log("success");
-                                    alert("Data changed successful");
-                                },
-                                onFailure: () => {
-
-
-                                    console.log("fail");
-
-                                }
-
-
-                            })  
-
-                            
-
-
-
-                        }
-
-                        else {
-
-                            const attributeList = [];
-                            const toinsert_attribute = new CognitoUserAttribute({
-
-                                Name: attribute_insert,
-                                Value: attribute_value
-
-
-                            });
-
-                            attributeList.push(toinsert_attribute);
-
-                            user.updateAttributes(attributeList, (err, result) => {
-
-                                if (err) {
-                                    console.log("fail", err);
-                                } else {
-
-                                    console.log("sucess", result);
-                                    alert("Data changed successful");
-
-                                }
-                            })
-
-                        }
-                    
-                    }
-
-
-
-                })
-
-
-            }
-            else {
-
-                reject();
-            }
-
-
-        })
-    }
-
+    const updateUser = async (email, attribute_insert, attribute_value) => {
+        return new Promise((resolve, reject) => {
+          const user = userPool.getCurrentUser();
+      
+          if (user) {
+            user.getSession((err, session) => {
+              if (err) {
+                reject("Error fetching session: " + err);
+                return;
+              }
+      
+              if (attribute_insert === "password") {
+                const user = new CognitoUser({
+                  Username: email,
+                  Pool: userPool,
+                });
+      
+                user.forgotPassword({
+                  onSuccess: () => {
+                    console.log("Password reset success");
+                    resolve("Password reset successful");
+                  },
+                  onFailure: (error) => {
+                    console.error("Password reset failed", error);
+                    reject("Password reset failed");
+                  },
+                });
+              } else {
+                const attributeList = [];
+                const toInsertAttribute = new CognitoUserAttribute({
+                  Name: attribute_insert,
+                  Value: attribute_value,
+                });
+      
+                attributeList.push(toInsertAttribute);
+      
+                user.updateAttributes(attributeList, (err, result) => {
+                  if (err) {
+                    console.error("Attribute update failed:", err);
+                    reject("Failed to update attribute");
+                  } else {
+                    console.log("Attribute updated successfully:", result);
+                    resolve("Attribute updated successfully");
+                  }
+                });
+              }
+            });
+          } else {
+            reject("No user is logged in");
+          }
+        });
+      };
+      
 
     const getSession = async () => {
         return new Promise((resolve, reject) => {
@@ -266,10 +218,6 @@ const AccountState = (props) => {
         });
     };
     
-
-
-  
-    
     const signup = async (email, passx) => {
 
         return await new Promise((resolve, reject) => {
@@ -305,7 +253,6 @@ const AccountState = (props) => {
 
     }
 
-
    const login = async  (username, password) => {
         const userPool = new CognitoUserPool({
             UserPoolId: UserPoolId,
@@ -326,12 +273,6 @@ const AccountState = (props) => {
             })
         ));
     }
-
-
-
-
-
-
 
     const verify = async (userx,code) => {
 
@@ -366,15 +307,8 @@ const AccountState = (props) => {
 
     }
 
-   
-    
-
-
     const authenticate = async (Usern, password) => {
     
-
-      
-       
         return await new Promise((resolve, reject) => {
 
           
@@ -469,15 +403,12 @@ const AccountState = (props) => {
     const CLIENT_ID = ClientID; // Your Cognito User Pool App Client ID
     const REDIRECT_URI = "https://hangiando.netlify.app/feed"; // Your redirect URI
     const DOMAIN = "us-east-1e4thxcnqj.auth.us-east-1.amazoncognito.com"; // Cognito domain
-    const REGION = "us-east-1";
 
     const handleGoogleSignIn = () => {
         const url = `https://${DOMAIN}/oauth2/authorize?identity_provider=Google&response_type=token&client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&scope=email+openid+profile+aws.cognito.signin.user.admin`;
         window.location.href = url; // Redirect the user to Google sign-in page
     };
     
-  
-
   // Step 2: Handle the redirect and get tokens
 async function handleRedirect() {
     const hash = window.location.hash;

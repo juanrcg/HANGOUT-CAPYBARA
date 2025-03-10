@@ -76,7 +76,17 @@ function Feed() {
                         owner: owner,
                     };
                     socket.send(JSON.stringify(body));
-                    console.log(`Sent "getproducts" action to WebSocket ${owner}`)
+                    body = {
+                      action: 'getservices',
+                      owner: owner,
+                  };
+                  socket.send(JSON.stringify(body));
+                  body = {
+                    action: 'getevents',
+                    owner: owner,
+                };
+                socket.send(JSON.stringify(body));
+                    console.log(`Sent "getitems" action to WebSocket ${owner}`)
                 
                 })
                 .catch(err => {
@@ -94,7 +104,18 @@ function Feed() {
     return (
         <>
             <Feed_Header />
-            <Bar />
+
+            
+            <div
+        className="container p-4 mt-4 shadow rounded"
+        style={{
+          maxWidth: "900px",
+          backgroundColor: "#000", // Dark background
+          color: "#fff", // Light text
+        }}
+      >
+        <Bar />
+            <div className="mb-4">
             <div className="posts-container">
                 {receivedPosts.length > 0 ? (
                     receivedPosts.map((post, index) => (
@@ -107,7 +128,7 @@ function Feed() {
                                 fontStyle: post.fontStyle,
                                 fontColor: post.fontColor,
                                 selectedProduct: JSON.parse(post.selectedProduct),
-                                author: post.author,
+                                pauthor: post.author,
                                 files: post.files,
                                 comments: post.comments,
                                 likes: post.likes,
@@ -119,6 +140,8 @@ function Feed() {
                 ) : (
                     <p>No posts available yet.</p>
                 )}
+            </div>
+            </div>
             </div>
             <Footer />
         </>

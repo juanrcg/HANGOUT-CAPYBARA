@@ -1,7 +1,7 @@
-﻿import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPencilAlt, faTrash } from "@fortawesome/free-solid-svg-icons";
 
-const Product = ({ id, name, price, onEdit, onDelete }) => {
+const Service = ({ id, name, price, onEdit, onDelete }) => {
   return (
     <div className="p-3 mb-3 border rounded" style={{ backgroundColor: "#222", color: "#fff" }}>
       <h4>{name}</h4>
@@ -20,4 +20,4 @@ const Product = ({ id, name, price, onEdit, onDelete }) => {
   );
 };
 
-export default Product;
+export default Service;

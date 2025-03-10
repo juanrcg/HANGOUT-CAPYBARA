@@ -1,98 +1,79 @@
-import React, { Component, useEffect, useState, useContext, useRef, useCallback, createContext } from 'react';
-import Feed_Header from '../User/feed_header';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faMessage, faUser } from '@fortawesome/free-solid-svg-icons';
-import AccountContext from '../../Context/AccountContext';
-import Messager from '../Chat/message_box';
-import Footer from '../footer';
-import { WebSocketProvider } from '../../Context/WebSocketContext'; // Adjust path as per your project structure
-import { useWebSocket } from '../../Context/WebSocketContext'; // Adjust path as per your WebSocket context
+﻿import React, { useState, useEffect, useContext } from "react";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faCalendarAlt } from "@fortawesome/free-solid-svg-icons";
+import { useWebSocket } from "../../Context/WebSocketContext";
+import Calendar from "../Finder/Ocalendar";
+import AccountContext from "../../Context/AccountContext";
 
-
-function Evento() {
-
-    const { ReceivedMessages, setReceivedMessages, socket } = useWebSocket();
-    const [isConnected, setIsConnected] = useState(false);
-    const [user_message, setMessage] = useState('');
-
+function Event({ event }) {
+    const { getSession } = useContext(AccountContext);
+    const urlParams = new URLSearchParams(window.location.search);
+    const email = urlParams.get("email");
+    const username = urlParams.get("username");
+    const { socket, receivedEvents } = useWebSocket();
+    const [events, setEvents] = useState([]);
+    const [showCalendar, setShowCalendar] = useState(false);
+    let sub = '';
 
     useEffect(() => {
-        if (socket) {
-            setIsConnected(socket.readyState === WebSocket.OPEN);
-
-            const handleOpen = () => setIsConnected(true);
-            const handleClose = () => setIsConnected(false);
-
-            socket.addEventListener('open', handleOpen);
-            socket.addEventListener('close', handleClose);
-
-            return () => {
-                socket.removeEventListener('open', handleOpen);
-                socket.removeEventListener('close', handleClose);
-            };
+        if (receivedEvents) {
+            setEvents(receivedEvents);
         }
-    }, [socket]);
+    }, [receivedEvents]);
 
-
-    const Create_event = (name,type) => {
+    const scheduleEvent = () => {
         if (socket && socket.readyState === WebSocket.OPEN) {
-            const message = {
-                action: "Create_event",
-                type: type,
-                name: name,
-                
+            let body = {
+                action: "getEvents",
+                userId: username,
             };
-
-            socket.send(JSON.stringify(message));
-            setReceivedMessages([...ReceivedMessages, { text: message.message, isSent: true }]);
-            setMessage('');
-        } else {
-            console.error('WebSocket connection not open.');
+            socket.send(JSON.stringify(body));
         }
+        console.log(`Scheduling event: ${event.title} with ${email}`);
+        setShowCalendar(true);
     };
 
-    const Delete_event = (id) => {
+    const setEvent = (event_time) => {
+        console.log(event_time.date, event_time.time);
+
         if (socket && socket.readyState === WebSocket.OPEN) {
-            const message = {
-                action: "Delete_event",
-                id: id,
-
-            };
-
-            socket.send(JSON.stringify(message));
-            setReceivedMessages([...ReceivedMessages, { text: message.message, isSent: true }]);
-            setMessage('');
-        } else {
-            console.error('WebSocket connection not open.');
+            getSession()
+                .then((session) => {
+                    sub = session.sub;
+                    const name = session.email;
+                    let body = {
+                        action: "addEvent",
+                        userId: username,
+                        username: email,
+                        receiverId: sub,
+                        receiverName: name,
+                        date: event_time.date,
+                        time: event_time.time,
+                        title: event.title,
+                        status: 'scheduled',
+                    };
+                    socket.send(JSON.stringify(body));
+                })
+                .catch((err) => {
+                    console.log(err);
+                });
         }
+        console.log(event_time);
     };
-
 
     return (
-
-        <>
-            <input
-                
-               
-                className="event_name"
-                placeholder="Type your Event Name"
-            />
-            <select>
-                <option value="One Time">One Time</option>
-                <option value="Daily">Daily</option>
-            </select>
-
-
-         
-         
-            <button onClick={Create_event}>Create a New Event</button>
-
-            <h1>Events Resume</h1>
-
-        </>
-
-    )
-    
-
+        <div className="p-3 mb-3 border rounded" style={{ backgroundColor: "#333", color: "#fff" }}>
+            <h4>{event.title}</h4>
+            <p className="text-muted">{event.description}</p>
+            <div className="text-end">
+                <button className="btn btn-outline-light" onClick={scheduleEvent}>
+                    <FontAwesomeIcon icon={faCalendarAlt} className="me-2" />
+                    Schedule Event
+                </button>
+            </div>
+            {showCalendar && <Calendar events={events} scheduleEvent={setEvent} />}
+        </div>
+    );
 }
-export default Evento;
+
+export default Event;

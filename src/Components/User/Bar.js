@@ -3,10 +3,11 @@ import { useWebSocket } from '../../Context/WebSocketContext';
 import { S3Client } from '@aws-sdk/client-s3';
 import { Upload } from "@aws-sdk/lib-storage";
 import AccountContext from '../../Context/AccountContext';
+import SearchableDropdown from './SearchableDropdown';
 
 function Bar() {
   const { getSession } = useContext(AccountContext);
-  const { socket, receivedProducts } = useWebSocket();
+  const { socket, receivedProducts, receivedServices, receivedEvents } = useWebSocket();
   const [content, setContent] = useState('');
   const [files, setFiles] = useState([]);
   const [previews, setPreviews] = useState([]);
@@ -15,8 +16,11 @@ function Bar() {
   const [fontStyle, setFontStyle] = useState({ bold: false, italic: false, underline: false });
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [showProductSelector, setShowProductSelector] = useState(false);
+  const [uploadStatus, setUploadStatus] = useState(null); // Upload status state
   let author = '';
   let ownername = '';
+  const [receivedItems, setReceivedItems] = useState([...receivedProducts, ...receivedServices, ...receivedEvents]);
+
 
   // Retrieve user session details
   getSession()
@@ -26,11 +30,11 @@ function Bar() {
     })
     .catch(err => console.log(err));
 
-  // Log updates to received products
-  useEffect(() => {
-   // console.log('Received products updated:', receivedProducts);
-   // receivedProducts.forEach(product => console.log(`Product added: ${product.name}`));
-  }, [receivedProducts]);
+    useEffect(() => {
+      const mergedItems = [...receivedProducts, ...receivedServices, ...receivedEvents];
+      setReceivedItems(mergedItems);
+      console.log("bueno maestro", mergedItems);
+    }, [receivedProducts, receivedServices, receivedEvents]);
 
   // Configure AWS S3 client
   const s3Client = new S3Client({
@@ -46,17 +50,23 @@ function Bar() {
     try {
       const params = {
         Bucket: 'hangoutdata',
-        Key: `post/admin/${file.name}`,
+        Key: `post/${author}/${file.name}`,
         Body: file.fileObject,
         ContentType: file.type,
       };
       
       const uploader = new Upload({ client: s3Client, params });
-      uploader.on("httpUploadProgress", progress => console.log(`Uploaded ${progress.loaded} of ${progress.total} bytes`));
+      uploader.on("httpUploadProgress", progress => {
+
+        const percent = Math.round((progress.loaded / progress.total) * 100);
+        setUploadStatus(`Uploaded ${percent}% of 100%`)})
+     
       const response = await uploader.done();
       console.log("Upload successful:", response);
+      setUploadStatus(`Upload successful`);
       return response;
     } catch (error) {
+      setUploadStatus('Upload failed');
       console.error("Error uploading file to S3:", error);
       throw error;
     }
@@ -108,12 +118,11 @@ function Bar() {
     setFontStyle(prevState => ({ ...prevState, [style]: !prevState[style] }));
   };
 
-  // Handle product selection
-  const handleProductSelect = (e) => {
-    const product = receivedProducts.find(p => p.id == e.target.value);
-    setSelectedProduct(product);
-    console.log(product.name);
-  };
+ // Handle product selection
+const handleProductSelect = (selectedValue) => {
+  console.log("Selected Value:", selectedValue); // Debugging the selected value
+  setSelectedProduct(selectedValue);
+};
 
   // Submit post content
   const handleSubmit = () => {
@@ -129,15 +138,17 @@ function Bar() {
           price: selectedProduct.price || null,
           description: selectedProduct.description || null,
           id: selectedProduct.id || null,
+          owner: selectedProduct.owner||null
         }) : null,
         author,
         ownername,
-        files: JSON.stringify(files.map(file => `https://hangoutdata.s3.us-east-1.amazonaws.com/post/admin/${file.name}`)),
+        files: JSON.stringify(files.map(file => `https://hangoutdata.s3.us-east-1.amazonaws.com/post/${author}/${file.name}`)),
       };
 
       console.log('Sending WebSocket message:', body);
-      socket.send(JSON.stringify(body));
+      
       handleFileSubmit().then(() => {
+        socket.send(JSON.stringify(body));
         setContent('');
         setFiles([]);
         setPreviews([]);
@@ -271,6 +282,8 @@ function Bar() {
       </button>
     </div>
   </div>
+  
+  {uploadStatus && <div className="upload-status">{uploadStatus}</div>}
 
   {/* Previews */}
   {previews.length > 0 && (
@@ -307,26 +320,18 @@ function Bar() {
     </div>
   )}
 
-  {/* Product Selector */}
+ 
+     
+     {/* Product Selector */}
   {showProductSelector && (
-    <div className="mt-4 w-100">
-      <h5>Select a Product</h5>
-      <select
-        className="form-select mb-3"
-        onChange={handleProductSelect}
-        defaultValue=""
-      >
-        <option value="" disabled>
-          Choose a product
-        </option>
-        {receivedProducts.map((product) => (
-          <option key={product.id} value={product.id}>
-            {product.name} - {product.price}
-          </option>
-        ))}
-      </select>
+<>
+    <h1>  Select a Product </h1>
 
-      {selectedProduct && (
+<SearchableDropdown items ={receivedItems} onSelect={handleProductSelect}></SearchableDropdown>
+</>
+)}
+
+  {selectedProduct && (
         <div>
           <h6>Selected Product:</h6>
           <p>Name: {selectedProduct.name}</p>
@@ -334,8 +339,8 @@ function Bar() {
           <p>Description: {selectedProduct.description}</p>
         </div>
       )}
-    </div>
-  )}
+   
+  
 </div>
   );
 }

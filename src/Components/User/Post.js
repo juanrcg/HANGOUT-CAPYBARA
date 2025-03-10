@@ -1,17 +1,16 @@
 import React, { useState , useContext, useEffect } from "react";
 import { useWebSocket } from '../../Context/WebSocketContext';
 import AccountContext from '../../Context/AccountContext';
-
+import MediaCarousel from "./MediaCarousel"; 
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faEdit, faTrashAlt } from '@fortawesome/free-solid-svg-icons';
+import CommentSection from "./Comment_section";
 
 const Post = ({ data, userPhoto, userName }) => {
   const { getSession } = useContext(AccountContext);
   const { socket,receivedRecomendations } = useWebSocket();
-  let author = '';
-  let ownername = '';
-
-
-
-  
+  const [author, setAuthor] = useState(null);
+  const [ownername, setOwnername] = useState("");
 
   const {
     id = "",
@@ -23,6 +22,7 @@ const Post = ({ data, userPhoto, userName }) => {
     files = [],
     likes = [], // Likes as an array
     comments = [],
+    pauthor = "",
   } = data || {};
 
   const [matchingRecommendations, setMatchingRecommendations] = useState([]);
@@ -38,7 +38,7 @@ const Post = ({ data, userPhoto, userName }) => {
 
   const parsedFiles = Array.isArray(files) ? files : [];
   const imageFiles = parsedFiles.filter(
-    (file) => file.endsWith(".jpg") || file.endsWith(".png") || file.endsWith(".jpeg")|| file.endsWith(".webp")
+    (file) => file.endsWith(".jpg") || file.endsWith(".png") || file.endsWith(".jpeg")|| file.endsWith(".webp")|| file.endsWith(".JPG")
   );
 
   
@@ -51,19 +51,39 @@ const Post = ({ data, userPhoto, userName }) => {
       file.endsWith(".MOV")
   );
 
-   // Retrieve user session details
-   getSession()
-   .then(session => {
-     author = session.sub;
-     ownername = session.name;
-   })
-   .catch(err => console.log(err));
+  const mediaFiles = [
+    ...imageFiles.map((file) => ({ type: "image", src: file })),
+    ...videoFiles.map((file) => ({ type: "video", src: file })),
+  ];
+
+  useEffect(() => {
+    if (author && Array.isArray(likes)) {
+      // Check if the user has liked the post based on the author field
+      const hasLiked = likes.some(like => like.author === author);
+      setLikedByUser(hasLiked);
+    }
+  }, [author, likes]); // Re-run when author or likes changes
+
+  useEffect(() => {
+    getSession()
+      .then(session => {
+        setAuthor(session.sub); // Store the session 'sub' as author
+        setOwnername(session.name); // Store the session 'name' as ownername
+      })
+      .catch(err => console.log(err));
+  }, []); // Run only once when the component mounts
 
   const [showProductDescription, setShowProductDescription] = useState(false);
+  const [commentsState, setCommentsState] = useState(comments || []);  // Fallback to an empty array if comments is null or undefined
   const [showComments, setShowComments] = useState(false);
   const [newComment, setNewComment] = useState("");
+  const [hoveredCommentId, setHoveredCommentId] = useState(null);
+  const [editingCommentId, setEditingCommentId] = useState(null); // Track which comment is being edited
+  const [editedCommentText, setEditedCommentText] = useState("");
   const [likesCount, setLikesCount] = useState(likes ? likes.length : 0);
-  const [likedByUser, setLikedByUser] = useState(likes ? likes.includes(author): null); // Assuming "admin" is the current user
+  // Check if the user already liked the post
+
+const [likedByUser, setLikedByUser] =useState(false);
   const [modalImage, setModalImage] = useState(null);
 
   const openImageModal = (imageSrc) => {
@@ -78,12 +98,12 @@ const Post = ({ data, userPhoto, userName }) => {
 
   const handleLikeToggle = () => {
     if (socket && socket.readyState === WebSocket.OPEN) {
-      const action = likedByUser ? "removelike" : "addlike";
+      const action = likedByUser ? "eliminatelike" : "addlike";
 
       const body = {
         action,
         id: id,
-        author: ownername, // Replace with the actual current user
+        author: author, // Replace with the actual current user
       };
 
       socket.send(JSON.stringify(body));
@@ -95,31 +115,125 @@ const Post = ({ data, userPhoto, userName }) => {
     }
   };
 
-  const addComment = () => {
-    if (newComment.trim()) {
-      if (socket && socket.readyState === WebSocket.OPEN) {
-        const body = {
-          action: "addcomment",
-          id: id,
-          content: newComment,
-          author: ownername,
-        };
-        socket.send(JSON.stringify(body));
-        console.log('Sent "addComment" action to WebSocket', id, newComment);
-        setNewComment(newComment);
-      }
-    }
+// Create a new comment
+const handleCreateComment = () => {
+  if (newComment.trim() === "") return; // Avoid empty comments
+
+  const newCommentData = {
+    text: newComment,
+    author: author, // Assuming you have the author session
+    ownername: ownername,
   };
+
+  const body ={
+    action: "addcomment",
+    id: id,
+    author: author,
+    ownername: ownername,
+    content: newComment,
+  }
+
+  if (socket && socket.readyState === WebSocket.OPEN) {
+
+    socket.send(JSON.stringify(body));
+
+  }
+
+
+
+  //Update comments state by appending the new comment
+    setCommentsState((prevComments) => [...prevComments, newCommentData]);
+
+  // Clear the input field
+  setNewComment("");
+};
+
+// Edit a comment
+const handleEditComment = (commentId) => {
+  const commentToEdit = commentsState.find((comment) => comment.id === commentId);
+  if (commentToEdit) {
+    setEditingCommentId(commentId); // Set the comment to be edited
+    setEditedCommentText(commentToEdit.content); // Set the comment text to be edited
+  }
+};
+
+// Save the edited comment
+const handleSaveEditedComment = () => {
+  if (editedCommentText.trim() === "") return; // Avoid saving empty text
+
+  const body ={
+    action: "editcomment",
+    postId: id,
+    commentId: editingCommentId,
+    author: author,
+    ownername: ownername,
+    newContent: editedCommentText,
+  }
+
+  if (socket && socket.readyState === WebSocket.OPEN) {
+
+    socket.send(JSON.stringify(body));
+
+  }
+
+  
+
+  const updatedComments = commentsState.map((comment) =>
+    comment.id === editingCommentId
+      ? { ...comment, content: editedCommentText }
+      : comment
+  );
+
+  // Update the comments state with the edited comment
+  setCommentsState(updatedComments);
+
+  // Clear the editing states
+  setEditingCommentId(null);
+  setEditedCommentText("");
+};
+
+// Delete a comment
+const handleDeleteComment = (commentId) => {
+
+  const body ={
+    action:"eliminatecomment",
+    postId: id,
+    commentId : commentId,
+    author: author,
+  };
+
+  if (socket && socket.readyState === WebSocket.OPEN) {
+    socket.send(JSON.stringify(body));
+  }
+  const updatedComments = commentsState.filter((comment) => comment.id !== commentId);
+
+  // Update the comments state after deletion
+  setCommentsState(updatedComments);
+};
 
   const contentStyle = {
     fontFamily,
     fontWeight: fontStyle.bold ? "bold" : "normal",
     fontStyle: fontStyle.italic ? "italic" : "normal",
     textDecoration: fontStyle.underline ? "underline" : "none",
-    color: fontColor,
+    color: fontColor === "#000000" ? "#ffffff" : fontColor,
     fontSize: fontStyle.size || "16px",
-    marginTop: "20px",
+    marginTop: imageFiles.length === 0 && videoFiles.length === 0 ? "60px" : "20px",
   };
+  
+
+
+  // Function to handle redirect
+const handleBuyNowClick = () => {
+
+  console.log(selectedProduct);
+ 
+    // Construct the URL with the owner's username
+    const redirectUrl = `https://hangiando.netlify.app/oinventory?username=${selectedProduct.owner}`;
+    // Redirect to the URL
+    window.open(redirectUrl, "_blank");  // This opens in a new tab.
+
+};
 
 
 
@@ -146,10 +260,11 @@ const Post = ({ data, userPhoto, userName }) => {
           display: "flex",
           flexDirection: "column",
           alignItems: "flex-start",
+          zIndex: 10,
         }}
       >
         <img
-          src={userPhoto}
+          src={`https://hangoutdata.s3.amazonaws.com/profile_pictures/${pauthor}`}
           alt={`${userName}'s photo`}
           style={{
             width: "30px",
@@ -179,40 +294,47 @@ const Post = ({ data, userPhoto, userName }) => {
       display: "flex",
       justifyContent: "center",
       alignItems: "center",
-      width: "60%", // Reduce width to make it narrower
-      height: "400px", // Increase height to make it taller
-      overflow: "hidden", // Ensures content stays within bounds
+      width: "100%", // Responsive width
+      maxWidth: "500px", // Prevents it from getting too large
+      height: "auto", // Adjust height dynamically while keeping aspect ratio
+      maxHeight: "400px", // Ensures videos don’t get too big
+      overflow: "hidden",
       borderRadius: "8px",
-      backgroundColor: "#000", // Background to avoid empty space
-      margin: "0 auto", // Centers the div horizontally
+      backgroundColor: "#000",
+      margin: "0 auto", // Centers the div
     }}
   >
-    {imageFiles.length > 0 ? (
-      <img
-        src={imageFiles[0]}
-        alt="Post Image"
-        style={{
-          width: "100%", // Fill the container width
-          height: "100%", // Fill the container height
-          objectFit: "contain", // Ensures the image is fully visible without cropping
-          cursor: "pointer",
-          display: "block", // Ensures no extra space around the image
-        }}
-        onClick={() => openImageModal(imageFiles[0])} // Click to view full image
-      />
+    {mediaFiles.length > 1 ? (
+      <MediaCarousel mediaFiles={mediaFiles} openImageModal={openImageModal} />
     ) : (
-      <video
-        controls
-        style={{
-          width: "100%",
-          height: "100%",
-          objectFit: "contain", // Ensures the video is fully visible without cropping
-          borderRadius: "8px",
-        }}
-      >
-        <source src={videoFiles[0]} type="video/mp4" />
-        Your browser does not support the video tag.
-      </video>
+      mediaFiles[0].type === "image" ? (
+        <img
+          src={mediaFiles[0].src}
+          alt="Post Media"
+          style={{
+            width: "100%",
+            height: "auto",
+            maxHeight: "400px", // Ensures images don't stretch
+            objectFit: "contain", // Keeps aspect ratio intact
+            cursor: "pointer",
+          }}
+          onClick={() => openImageModal(mediaFiles[0].src)}
+        />
+      ) : (
+        <video
+          controls
+          style={{
+            width: "100%",
+            height: "auto",
+            maxHeight: "400px",
+            borderRadius: "8px",
+            objectFit: "contain",
+          }}
+        >
+          <source src={mediaFiles[0].src} type="video/mp4" />
+          Your browser does not support the video tag.
+        </video>
+      )
     )}
   </div>
 )}
@@ -304,6 +426,8 @@ const Post = ({ data, userPhoto, userName }) => {
             fontSize: "24px",
             zIndex: 1,
           }}
+
+          
         >
 
           {showProductDescription ? (
@@ -316,64 +440,25 @@ const Post = ({ data, userPhoto, userName }) => {
         
       </div>
 
-      {/* Comments Section */}
-      {showComments && (
-        <div
-          style={{
-            marginTop: "20px",
-            borderTop: "1px solid #ddd",
-            paddingTop: "15px",
-            maxHeight: "100px",
-            overflowY: "auto",
-          }}
-        >
-          {Array.isArray(comments) && comments.length > 0 ? (
-            <ul style={{ listStyle: "none", padding: 0 }}>
-              {comments.map((comment, index) => (
-                <li key={index} style={{ marginBottom: "10px", color: "white" }}>
-                  {comment.author} : {comment.content}
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p style={{ color: "white" }}>No comments</p>
-          )}
-          <div
-            style={{
-              display: "flex",
-              gap: "10px",
-              marginTop: "10px",
-            }}
-          >
-            <input
-              type="text"
-              value={newComment}
-              onChange={(e) => setNewComment(e.target.value)}
-              placeholder="Add a comment..."
-              style={{
-                flex: 1,
-                padding: "10px",
-                border: "1px solid #ddd",
-                borderRadius: "5px",
-                outline: "none",
-              }}
-            />
-            <button
-              onClick={addComment}
-              style={{
-                padding: "10px 20px",
-                backgroundColor: "#007bff",
-                color: "white",
-                border: "none",
-                borderRadius: "5px",
-                cursor: "pointer",
-              }}
-            >
-              Post
-            </button>
-          </div>
-        </div>
-      )}
+      {/*Comment Section*/}
+ 
+
+  <CommentSection
+  commentsState={commentsState}
+  showComments={showComments}
+  editingCommentId={editingCommentId}
+  newComment={newComment}
+  setNewComment={setNewComment}
+  handleCreateComment={handleCreateComment}
+  handleEditComment={handleEditComment}
+  handleSaveEditedComment={handleSaveEditedComment}
+  handleDeleteComment={handleDeleteComment}
+  setHoveredCommentId={setHoveredCommentId}
+  hoveredCommentId={hoveredCommentId}
+  setEditedCommentText={setEditedCommentText}
+  editedCommentText={editedCommentText}
+/>
+
 
       {/* Product Section */}
       {showProductDescription && selectedProduct && (
@@ -392,11 +477,13 @@ const Post = ({ data, userPhoto, userName }) => {
             minWidth: "200px",
           }}
         >
+          <p style={{ marginBottom: "10px" }}>{selectedProduct.name}</p>
           <p style={{ marginBottom: "10px" }}>{selectedProduct.description}</p>
           <p style={{ marginBottom: "10px", fontWeight: "bold" }}>
             Price: ${selectedProduct.price}
           </p>
           <button
+           onClick={handleBuyNowClick} // Here you call the function
             style={{
               padding: "10px 20px",
               backgroundColor: "#007bff",
@@ -449,17 +536,20 @@ const Post = ({ data, userPhoto, userName }) => {
                         <p>{rec.description}</p>
                         <p style={{ fontWeight: "bold" }}>Price: ${rec.price}</p>
                         <button
-                            style={{
-                                padding: "8px 15px",
-                                backgroundColor: "#007bff",
-                                color: "white",
-                                border: "none",
-                                borderRadius: "5px",
-                                cursor: "pointer",
-                            }}
+                          
+                          style={{
+                            padding: "8px 15px",
+                            backgroundColor: "#007bff",
+                            color: "white",
+                            border: "none",
+                            borderRadius: "5px",
+                            cursor: "pointer",
+                          }}
+                          onClick={handleBuyNowClick} // Here you call the function
                         >
-                            Buy Now
+                          Buy Now
                         </button>
+
                     </div>
                 )}
             </div>

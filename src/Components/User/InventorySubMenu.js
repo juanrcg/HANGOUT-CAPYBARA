@@ -1,32 +1,29 @@
 import React from "react";
-import { useLocation, useNavigate } from "react-router-dom";
 
-const InventorySubMenu = ({ keyword }) => {
-  const location = useLocation();
-  const navigate = useNavigate();
-
-  const menuItems = [
-    { name: "Products", path: "/inventory/products" },
-    { name: "Services", path: "/inventory/services" },
-  ];
-
-  const handleNavigation = (path) => {
-    navigate(`${path}?keyword=${keyword}`);
-  };
-
+const InventorySubMenu = ({ setActiveTab, activeTab }) => {
   return (
-    <div className="sub-menu d-flex justify-content-around border-bottom">
-      {menuItems.map((item) => (
-        <div
-          key={item.name}
-          className={`sub-menu-item px-4 py-2 ${
-            location.pathname === item.path ? "active" : ""
-          }`}
-          onClick={() => handleNavigation(item.path)}
-        >
-          {item.name}
-        </div>
-      ))}
+    <div className="sub-menu d-flex justify-content-center w-100 border-bottom" style={{ backgroundColor: "#222", color: "#fff" }}>
+      <div
+        className={`sub-menu-item px-4 py-3 ${activeTab === "products" ? "active" : ""}`}
+        style={{ cursor: "pointer", fontWeight: activeTab === "products" ? "bold" : "normal" }}
+        onClick={() => setActiveTab("products")}
+      >
+        Products
+      </div>
+      <div
+        className={`sub-menu-item px-4 py-3 ${activeTab === "services" ? "active" : ""}`}
+        style={{ cursor: "pointer", fontWeight: activeTab === "services" ? "bold" : "normal" }}
+        onClick={() => setActiveTab("services")}
+      >
+        Services
+      </div>
+      <div
+        className={`sub-menu-item px-4 py-3 ${activeTab === "events" ? "active" : ""}`}
+        style={{ cursor: "pointer", fontWeight: activeTab === "events" ? "bold" : "normal" }}
+        onClick={() => setActiveTab("events")}
+      >
+        Events
+      </div>
     </div>
   );
 };
